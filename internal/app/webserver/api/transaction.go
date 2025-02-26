@@ -1,4 +1,4 @@
-package ledger
+package api
 
 import (
 	"teya_home_assignment/internal/pkg/ledger"
