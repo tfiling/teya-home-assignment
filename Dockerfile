@@ -28,6 +28,10 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     go build -ldflags="-w -s" -o /out/webserver cmd/webserver/main.go
 
+FROM base AS unit-test
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go test -v ./...
+
 FROM base as webserver
 COPY --from=build-webserver /out/webserver /webserver
 USER ${USER}:${USER}

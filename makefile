@@ -13,8 +13,14 @@ build-ws:
 	docker build --target webserver -t $(LOCAL_REPO)/webserver:$(IMAGE_TAG) .
 	@echo "====================== building ws completed ======================"
 
+.PHONY: test
+test: build
+	@echo "====================== Running Tests ======================"
+	docker build . --target unit-test --tag $(LOCAL_REPO)/webserver-tests:latest
+	@echo "====================== Completed Running Tests ======================"
+
 .PHOMY: run
-run: build
+run: test
 	@echo "====================== Running Local Dev Env ======================"
 	@TAG=${IMAGE_TAG} docker compose -f docker-compose.yaml up -d
 
