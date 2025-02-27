@@ -29,7 +29,6 @@ func (c *LedgerController) RegisterRoutes(router fiber.Router) error {
 }
 
 func (c *LedgerController) createTransaction(ctx *fiber.Ctx) error {
-	//TODO - solve weird bug where a duplicated, zero valued transaction is added
 	reqBody := api.NewTransactionReqBody{}
 	if err := ctx.BodyParser(&reqBody); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).SendString("invalid request body")
@@ -46,7 +45,7 @@ func (c *LedgerController) createTransaction(ctx *fiber.Ctx) error {
 
 func (c *LedgerController) getAllTransaction(ctx *fiber.Ctx) error {
 	//TODO - implementing pagination
-	res := make([]api.Transaction, len(c.ledgerService.TransactionHistory))
+	res := make([]api.Transaction, 0)
 	for _, transaction := range c.ledgerService.TransactionHistory {
 		res = append(res, api.FromTransactionModel(transaction))
 	}
