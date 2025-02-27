@@ -1,18 +1,27 @@
 # teya-home-assignment
- this is a solution for a home assignment Teya gave me as part of the interview process
- In this assignment I'm asked to implement a simple ledger system that supports adding transactions and getting the balance and transaction history.
+# Overview
+This is a solution for a home assignment from Teya, implementing a simple ledger system that supports:
+- Adding transactions
+- Getting account balance 
+- Retrieving transaction history
 
- Important Decisions I made:
-- Transactions are immutable.
-- I made a separation between internal and external/ user-facing models as we don't want to expose the internal logic of the ledger to the user.
-- The logic is in a separate component(pkg/ledger) to make it testable(in the context of this assignment, an integration test of the WS API routes is an overkill IMO).
-- I decided to use primitive logs by printing to stdout. I decided on high verbosity logs.
-- I would allow a negative balance(we Would like to charge interest for "lending" that money).
-- I developed this solution while keeping in mind that the solution should be thread safe but that wasn't my focus. I do not guarantee there are no race conditions. 
+## Key Design Decisions
 
-Interesting discussion points for the interview:
+### Architecture
+- **Immutable Transactions**: Once created, transactions cannot be modified
+- **Separation of Models**: Internal and external/user-facing models are separated to encapsulate ledger logic
+- **Modular Design**: Core logic is in a separate component (`pkg/ledger`) to enable isolated testing
+- **Thread Safety**: Basic thread safety considerations, though not fully guaranteed
+
+### Technical Choices
+- **Logging**: Simple stdout logging with high verbosity for debugging
+- **Negative Balances**: Allowed to support potential interest charging on overdrafts
+- **Minimal Implementation**: Focused on core requirements without additional fields like dates or merchant info
+
+## Intresting discussion Topics for the interview
 - Test coverage and kinds of tests
 - Minimalism - I did not add any properties that were not required by the assignment(e.g. date, merchant/the other as part of the transaction model)
+
 
 ## API Documentation
 
@@ -90,8 +99,8 @@ make run
 # Run tests
 make test
 
-# Clean build artifacts
-make clean
+# Stop the webserver container
+make stop
 ```
 
 ## Using Docker Compose
@@ -133,12 +142,12 @@ Here are some example cURL commands to interact with the ledger API:
 
 ```bash
 # Add a positive transaction (deposit)
-curl -X POST http://localhost:8080/transaction \
+curl -X POST http://localhost:8080/api/v1/transaction \
   -H "Content-Type: application/json" \
   -d '{"amount": "25.50"}'
 
 # Add a negative transaction (withdrawal)
-curl -X POST http://localhost:8080/transaction \
+curl -X POST http://localhost:8080/api/v1/transaction \
   -H "Content-Type: application/json" \
   -d '{"amount": "-10.75"}'
 ```
@@ -147,20 +156,18 @@ curl -X POST http://localhost:8080/transaction \
 
 ```bash
 # Retrieve the current account balance
-curl -X GET http://localhost:8080/account
+curl -X GET http://localhost:8080/api/v1/account
 ```
 
 ## Get Transaction History
 
 ```bash
 # Get the first 10 transactions (default limit)
-curl -X GET "http://localhost:8080/transaction?offset=0"
+curl -X GET "http://localhost:8080/api/v1/transaction?offset=0"
 
 # Get 5 transactions starting from position 10
-curl -X GET "http://localhost:8080/transaction?offset=10&limit=5"
+curl -X GET "http://localhost:8080/api/v1/transaction?offset=10&limit=5"
 
 # Get the most recent transactions (assuming transactions are ordered by recency)
-curl -X GET "http://localhost:8080/transaction?offset=0&limit=20"
+curl -X GET "http://localhost:8080/api/v1/transaction?offset=0&limit=20"
 ```
-
-You can add these examples to your README.md file to help users understand how to interact with your API.
