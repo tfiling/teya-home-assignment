@@ -1,6 +1,7 @@
 package ledger_test
 
 import (
+	"fmt"
 	"testing"
 	"teya_home_assignment/internal/pkg/ledger"
 
@@ -268,4 +269,158 @@ func TestLedger_GetTransactionHistory__PreservesTransactionOrder(t *testing.T) {
 		assert.Equal(t, uint64(i+1), history[i].ID)
 		assert.Equal(t, expectedAmount, history[i].Amount)
 	}
+}
+
+func TestCachingLedger_GetBalance__UsesCachedBalanceForSubsequentCalls(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(100.50))
+	assert.NoError(t, err)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(200.75))
+	assert.NoError(t, err)
+	expectedBalance := decimal.NewFromFloat32(100.50 + 200.75)
+	initialBalance, err := ledgerInstance.GetBalance()
+
+	// Act
+	cachedBalance, err := ledgerInstance.GetBalance()
+
+	// Assert
+	assert.NoError(t, err)
+	assert.True(t, expectedBalance.Equal(initialBalance), fmt.Sprintf("%+v != %+v", expectedBalance, initialBalance))
+	assert.True(t, expectedBalance.Equal(cachedBalance), fmt.Sprintf("%+v != %+v", expectedBalance, cachedBalance))
+}
+
+func TestCachingLedger_GetBalance__UpdatesCacheAfterNewTransactions(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(100.00))
+	assert.NoError(t, err)
+	initialBalance, err := ledgerInstance.GetBalance()
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(100.00).Equal(initialBalance),
+		fmt.Sprintf("%+v != 100.00", initialBalance))
+
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(50.00))
+	assert.NoError(t, err)
+
+	// Act
+	updatedBalance, err := ledgerInstance.GetBalance()
+
+	// Assert
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(150.00).Equal(updatedBalance),
+		fmt.Sprintf("%+v != 150.00", updatedBalance))
+}
+
+func TestCachingLedger_GetBalance__CachesIncrementalUpdates(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(100.00))
+	assert.NoError(t, err)
+	_, err = ledgerInstance.GetBalance()
+	assert.NoError(t, err)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(50.00))
+	assert.NoError(t, err)
+	balanceAfterSecond, err := ledgerInstance.GetBalance()
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(150.00).Equal(balanceAfterSecond),
+		fmt.Sprintf("%+v != 150.00", balanceAfterSecond))
+
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(25.00))
+	assert.NoError(t, err)
+
+	// Act
+	finalBalance, err := ledgerInstance.GetBalance()
+
+	// Assert
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(175.00).Equal(finalBalance),
+		fmt.Sprintf("%+v != 150.00", finalBalance))
+}
+
+func TestCachingLedger_GetBalance__HandlesEmptyLedgerCaching(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+
+	initialBalance, err := ledgerInstance.GetBalance()
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(0).Equal(initialBalance),
+		fmt.Sprintf("%+v != 0.00", initialBalance))
+
+	// Act
+	cachedBalance, err := ledgerInstance.GetBalance()
+
+	// Assert
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(0).Equal(cachedBalance),
+		fmt.Sprintf("%+v != 0.00", cachedBalance))
+}
+
+func TestCachingLedger_GetBalance__PreservesCacheWithNegativeTransactions(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(100.00))
+	assert.NoError(t, err)
+	initialBalance, err := ledgerInstance.GetBalance()
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(100.00).Equal(initialBalance),
+		fmt.Sprintf("%+v != 100.00", initialBalance))
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(-30.00))
+	assert.NoError(t, err)
+
+	// Act
+	updatedBalance, err := ledgerInstance.GetBalance()
+
+	// Assert
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(70.00).Equal(updatedBalance),
+		fmt.Sprintf("%+v != 70.00", updatedBalance))
+}
+
+func TestCachingLedger_GetBalance__CacheWorksWithMultipleCallsAndTransactions(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(10.00))
+	assert.NoError(t, err)
+	firstBalance, err := ledgerInstance.GetBalance()
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(10.00).Equal(firstBalance),
+		fmt.Sprintf("%+v != 10.00", firstBalance))
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(20.00))
+	assert.NoError(t, err)
+	secondBalance, err := ledgerInstance.GetBalance()
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(30.00).Equal(secondBalance),
+		fmt.Sprintf("%+v != 30.00", secondBalance))
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(30.00))
+	assert.NoError(t, err)
+
+	// Act
+	thirdBalanceFirstCall, err := ledgerInstance.GetBalance()
+	assert.NoError(t, err)
+	thirdBalanceSecondCall, err := ledgerInstance.GetBalance()
+
+	// Assert
+	assert.NoError(t, err)
+	assert.True(t, decimal.NewFromFloat32(60.00).Equal(thirdBalanceFirstCall),
+		fmt.Sprintf("%+v != 60.00", thirdBalanceFirstCall))
+	assert.True(t, decimal.NewFromFloat32(60.00).Equal(thirdBalanceSecondCall),
+		fmt.Sprintf("%+v != 60.00", thirdBalanceSecondCall))
 }
