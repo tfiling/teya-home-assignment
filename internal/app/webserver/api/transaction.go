@@ -12,6 +12,14 @@ type Transaction struct {
 	Amount decimal.Decimal `json:"amount"`
 }
 
+type NewTransactionReqBody struct {
+	Amount string `json:"amount"`
+}
+
+type GetBalanceRespBody struct {
+	Balance string `json:"balance"`
+}
+
 func FromTransactionModel(transaction ledger.Transaction) Transaction {
 	return Transaction{
 		ID:     transaction.ExternalID,

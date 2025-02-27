@@ -8,6 +8,9 @@ import (
 const (
 	APIRouteBasePath = "/api/v1"
 
+	TransactionRoute = "/transaction"
+	AccountRoute     = "/account"
+
 	HealthRoute = "/health"
 )
 
@@ -17,12 +20,17 @@ type Controller interface {
 
 func InitControllers() (controllers []Controller, err error) {
 	controllers = append(controllers, NewHealthController())
+	ledgerController, err := NewLedgerController()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init ledger controller")
+	}
+	controllers = append(controllers, ledgerController)
 	return controllers, nil
 }
 
-func SetupRoutes(v1Router fiber.Router, controllers []Controller) error {
+func SetupRoutes(router fiber.Router, controllers []Controller) error {
 	for _, controller := range controllers {
-		if err := controller.RegisterRoutes(v1Router); err != nil {
+		if err := controller.RegisterRoutes(router); err != nil {
 			return errors.Wrap(err, "failed to register routes")
 		}
 	}

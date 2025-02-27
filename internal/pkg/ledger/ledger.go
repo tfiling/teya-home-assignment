@@ -20,21 +20,23 @@ func NewLedger() (*Ledger, error) {
 	return l, nil
 }
 
-func (l *Ledger) AddTransaction(amount decimal.Decimal) {
+func (l *Ledger) AddTransaction(amount decimal.Decimal) error {
 	newTransaction := Transaction{
 		ID:         l.getNewID(),
 		Amount:     amount,
 		ExternalID: uuid.New(),
 	}
 	l.TransactionHistory = append(l.TransactionHistory, newTransaction)
+	return nil
 }
 
-func (l *Ledger) GetBalance() decimal.Decimal {
+func (l *Ledger) GetBalance() (decimal.Decimal, error) {
+	//TODO - optimize performance for large ledger
 	balance := decimal.NewFromFloat(0)
 	for _, transaction := range l.TransactionHistory {
 		balance = balance.Add(transaction.Amount)
 	}
-	return balance
+	return balance, nil
 }
 func (l *Ledger) getNewID() uint64 {
 	return l.transactionIdSeq.Add(1)
