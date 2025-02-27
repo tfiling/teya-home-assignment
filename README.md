@@ -72,5 +72,95 @@ Interesting discussion points for the interview:
 
 
 
+# Running the Project
 
+You can run this project either using the provided Makefile commands or Docker Compose. Both methods are explained below.
 
+## Using Makefile
+
+The Makefile provides several commands to build, run, and test the application:
+
+```bash
+# Build the application
+make build
+
+# Run the application
+make run
+
+# Run tests
+make test
+
+# Clean build artifacts
+make clean
+```
+
+## Using Docker Compose
+
+Docker Compose allows you to run the application in a containerized environment:
+
+1. Make sure you have Docker and Docker Compose installed on your system.
+
+2. Build and start the container:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. To run in detached mode:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. To stop the container:
+   ```bash
+   docker-compose down
+   ```
+
+## API Access
+
+Once the application is running, you can access the API endpoints as described in the API Documentation section:
+
+- Create Transaction: `POST /transaction`
+- Get Transaction History: `GET /transaction?offset=0&limit=10`
+- Get Account Balance: `GET /account`
+
+The API will be available at `http://localhost:8080` by default.
+
+# API Usage Examples with cURL
+
+Here are some example cURL commands to interact with the ledger API:
+
+## Create a Transaction
+
+```bash
+# Add a positive transaction (deposit)
+curl -X POST http://localhost:8080/transaction \
+  -H "Content-Type: application/json" \
+  -d '{"amount": "25.50"}'
+
+# Add a negative transaction (withdrawal)
+curl -X POST http://localhost:8080/transaction \
+  -H "Content-Type: application/json" \
+  -d '{"amount": "-10.75"}'
+```
+
+## Get Account Balance
+
+```bash
+# Retrieve the current account balance
+curl -X GET http://localhost:8080/account
+```
+
+## Get Transaction History
+
+```bash
+# Get the first 10 transactions (default limit)
+curl -X GET "http://localhost:8080/transaction?offset=0"
+
+# Get 5 transactions starting from position 10
+curl -X GET "http://localhost:8080/transaction?offset=10&limit=5"
+
+# Get the most recent transactions (assuming transactions are ordered by recency)
+curl -X GET "http://localhost:8080/transaction?offset=0&limit=20"
+```
+
+You can add these examples to your README.md file to help users understand how to interact with your API.
