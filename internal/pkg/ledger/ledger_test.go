@@ -146,3 +146,126 @@ func TestLedger_GetBalance__HandlesFloatingPointPrecision(t *testing.T) {
 	// decimal values (0.1, 0.2, 0.3) that don't have exact binary floating-point representations.
 	assert.False(t, exact)
 }
+
+func TestLedger_GetTransactionHistory__ReturnsEmptyForEmptyLedger(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+
+	// Act
+	history, err := ledgerInstance.GetTransactionHistory(0, 10)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Empty(t, history)
+}
+
+func TestLedger_GetTransactionHistory__ReturnsAllTransactionsWithinLimit(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(100.50))
+	assert.NoError(t, err)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(200.75))
+	assert.NoError(t, err)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(-50.25))
+	assert.NoError(t, err)
+
+	// Act
+	history, err := ledgerInstance.GetTransactionHistory(0, 3)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Len(t, history, 3)
+	assert.Equal(t, uint64(1), history[0].ID)
+	assert.Equal(t, uint64(2), history[1].ID)
+	assert.Equal(t, uint64(3), history[2].ID)
+}
+
+func TestLedger_GetTransactionHistory__RespectsLimit(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(100.50))
+	assert.NoError(t, err)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(200.75))
+	assert.NoError(t, err)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(-50.25))
+	assert.NoError(t, err)
+
+	// Act
+	history, err := ledgerInstance.GetTransactionHistory(0, 2)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Len(t, history, 2)
+	assert.Equal(t, uint64(1), history[0].ID)
+	assert.Equal(t, uint64(2), history[1].ID)
+}
+
+func TestLedger_GetTransactionHistory__RespectsOffset(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(100.50))
+	assert.NoError(t, err)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(200.75))
+	assert.NoError(t, err)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(-50.25))
+	assert.NoError(t, err)
+
+	// Act
+	history, err := ledgerInstance.GetTransactionHistory(1, 10)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Len(t, history, 2)
+	assert.Equal(t, uint64(2), history[0].ID)
+	assert.Equal(t, uint64(3), history[1].ID)
+}
+
+func TestLedger_GetTransactionHistory__HandlesOffsetBeyondSize(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(100.50))
+	assert.NoError(t, err)
+	err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(200.75))
+	assert.NoError(t, err)
+
+	// Act
+	history, err := ledgerInstance.GetTransactionHistory(5, 10)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Empty(t, history)
+}
+
+func TestLedger_GetTransactionHistory__PreservesTransactionOrder(t *testing.T) {
+	// Arrange
+	ledgerInstance, err := ledger.NewLedger()
+	require.NoError(t, err)
+	require.NotNil(t, ledgerInstance)
+	amounts := []float32{100.50, -25.75, 300.00, -150.25, 50.00}
+	for _, amount := range amounts {
+		err = ledgerInstance.AddTransaction(decimal.NewFromFloat32(amount))
+		assert.NoError(t, err)
+	}
+
+	// Act
+	history, err := ledgerInstance.GetTransactionHistory(0, 10)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Len(t, history, 5)
+	for i, amount := range amounts {
+		expectedAmount := decimal.NewFromFloat32(amount)
+		assert.Equal(t, uint64(i+1), history[i].ID)
+		assert.Equal(t, expectedAmount, history[i].Amount)
+	}
+}

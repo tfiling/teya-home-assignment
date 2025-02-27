@@ -12,12 +12,23 @@ type Transaction struct {
 	Amount decimal.Decimal `json:"amount"`
 }
 
+// TODO - add validation
 type NewTransactionReqBody struct {
 	Amount string `json:"amount"`
 }
 
 type GetBalanceRespBody struct {
 	Balance string `json:"balance"`
+}
+
+type PaginatedTransactionsResponse struct {
+	Transactions []Transaction `json:"transactions"`
+	Pagination   Pagination    `json:"pagination"`
+}
+
+type Pagination struct {
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
 }
 
 func FromTransactionModel(transaction ledger.Transaction) Transaction {

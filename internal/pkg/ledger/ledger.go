@@ -38,6 +38,21 @@ func (l *Ledger) GetBalance() (decimal.Decimal, error) {
 	}
 	return balance, nil
 }
+
+func (l *Ledger) GetTransactionHistory(offset, limit int) ([]Transaction, error) {
+	if offset > len(l.TransactionHistory) {
+		//TODO - consider returning an error here
+		return []Transaction{}, nil
+	}
+
+	endIndex := offset + limit
+	if endIndex > len(l.TransactionHistory) {
+		endIndex = len(l.TransactionHistory)
+	}
+
+	return l.TransactionHistory[offset:endIndex], nil
+}
+
 func (l *Ledger) getNewID() uint64 {
 	return l.transactionIdSeq.Add(1)
 }
