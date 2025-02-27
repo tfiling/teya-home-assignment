@@ -12,9 +12,8 @@ type Transaction struct {
 	Amount decimal.Decimal `json:"amount"`
 }
 
-// TODO - add validation
 type NewTransactionReqBody struct {
-	Amount string `json:"amount"`
+	Amount string `json:"amount" validate:"required,number"`
 }
 
 type GetBalanceRespBody struct {

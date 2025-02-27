@@ -5,6 +5,7 @@ import (
 	"teya_home_assignment/internal/app/webserver/api"
 	"teya_home_assignment/internal/pkg/ledger"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
@@ -33,6 +34,9 @@ func (c *LedgerController) createTransaction(ctx *fiber.Ctx) error {
 	reqBody := api.NewTransactionReqBody{}
 	if err := ctx.BodyParser(&reqBody); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).SendString("invalid request body")
+	}
+	if err := validator.New().Struct(reqBody); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	transactionAmount, err := decimal.NewFromString(reqBody.Amount)
 	if err != nil {
