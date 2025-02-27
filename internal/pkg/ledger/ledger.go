@@ -1,6 +1,7 @@
 package ledger
 
 import (
+	"fmt"
 	"sync/atomic"
 
 	"github.com/google/uuid"
@@ -35,6 +36,8 @@ func (l *Ledger) AddTransaction(amount decimal.Decimal) error {
 }
 
 func (l *Ledger) GetBalance() (decimal.Decimal, error) {
+	fmt.Printf("GetBalance called with current cache:\n cachedBalance: %v\n cachedBalanceTillIdx: %v\n",
+		l.cachedBalance, l.cachedBalanceTillIdx)
 	balance := l.cachedBalance
 	for i := l.cachedBalanceTillIdx + 1; i < int64(len(l.TransactionHistory)); i++ {
 		balance = balance.Add(l.TransactionHistory[i].Amount)

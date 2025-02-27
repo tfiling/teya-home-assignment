@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	fmt.Println("Starting webserver...")
 	app := fiber.New()
 	apiGroup := app.Group(controllers.APIRouteBasePath)
 	APIControllers, err := controllers.InitControllers()

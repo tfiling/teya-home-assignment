@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/pkg/errors"
 )
@@ -19,6 +21,7 @@ type Controller interface {
 }
 
 func InitControllers() (controllers []Controller, err error) {
+	fmt.Println("initializing controllers")
 	controllers = append(controllers, NewHealthController())
 	ledgerController, err := NewLedgerController()
 	if err != nil {
@@ -29,6 +32,7 @@ func InitControllers() (controllers []Controller, err error) {
 }
 
 func SetupRoutes(router fiber.Router, controllers []Controller) error {
+	fmt.Println("setup API routes")
 	for _, controller := range controllers {
 		if err := controller.RegisterRoutes(router); err != nil {
 			return errors.Wrap(err, "failed to register routes")
