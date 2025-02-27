@@ -11,6 +11,8 @@ This is a solution for a home assignment from Teya, implementing a simple ledger
 - **Immutable Transactions**: Once created, transactions cannot be modified
 - **Separation of Models**: Internal and external/user-facing models are separated to encapsulate ledger logic
 - **Modular Design**: Core logic is in a separate component (`pkg/ledger`) to enable isolated testing
+- **In-Memory Storage**: Transactions are stored in memory using a slice property of the ledger component (`pkg/ledger`)
+
 - **Thread Safety**: Basic thread safety considerations, though not fully guaranteed
 
 ### Technical Choices
@@ -28,7 +30,7 @@ This is a solution for a home assignment from Teya, implementing a simple ledger
 ### Endpoints
 
 #### Create Transaction
-- **URL**: `/transaction`
+- **URL**: `/api/v1/transaction`
 - **Method**: `POST`
 - **Request Body**:
   ```json
@@ -42,7 +44,7 @@ This is a solution for a home assignment from Teya, implementing a simple ledger
   - Status: 500 Internal Server Error (Server error)
 
 #### Get Transaction History
-- **URL**: `/transaction?offset=0&limit=10`
+- **URL**: `/api/v1/transaction?offset=0&limit=10`
 - **Method**: `GET`
 - **Query Parameters**:
   - `offset` (required): Starting position for pagination (must be >= 0)
@@ -128,11 +130,11 @@ Docker Compose allows you to run the application in a containerized environment:
 
 Once the application is running, you can access the API endpoints as described in the API Documentation section:
 
-- Create Transaction: `POST /transaction`
-- Get Transaction History: `GET /transaction?offset=0&limit=10`
+- Create Transaction: `POST /api/v1/transaction`
+- Get Transaction History: `GET /api/v1/transaction?offset=0&limit=10`
 - Get Account Balance: `GET /account`
 
-The API will be available at `http://localhost:8080` by default.
+The API will be available at `http://localhost:8000` by default.
 
 # API Usage Examples with cURL
 
@@ -142,12 +144,12 @@ Here are some example cURL commands to interact with the ledger API:
 
 ```bash
 # Add a positive transaction (deposit)
-curl -X POST http://localhost:8080/api/v1/transaction \
+curl -X POST http://localhost:8000/api/v1/transaction \
   -H "Content-Type: application/json" \
   -d '{"amount": "25.50"}'
 
 # Add a negative transaction (withdrawal)
-curl -X POST http://localhost:8080/api/v1/transaction \
+curl -X POST http://localhost:8000/api/v1/transaction \
   -H "Content-Type: application/json" \
   -d '{"amount": "-10.75"}'
 ```
@@ -156,18 +158,18 @@ curl -X POST http://localhost:8080/api/v1/transaction \
 
 ```bash
 # Retrieve the current account balance
-curl -X GET http://localhost:8080/api/v1/account
+curl -X GET http://localhost:8000/api/v1/account
 ```
 
 ## Get Transaction History
 
 ```bash
 # Get the first 10 transactions (default limit)
-curl -X GET "http://localhost:8080/api/v1/transaction?offset=0"
+curl -X GET "http://localhost:8000/api/v1/transaction?offset=0"
 
 # Get 5 transactions starting from position 10
-curl -X GET "http://localhost:8080/api/v1/transaction?offset=10&limit=5"
+curl -X GET "http://localhost:8000/api/v1/transaction?offset=10&limit=5"
 
 # Get the most recent transactions (assuming transactions are ordered by recency)
-curl -X GET "http://localhost:8080/api/v1/transaction?offset=0&limit=20"
+curl -X GET "http://localhost:8000/api/v1/transaction?offset=0&limit=20"
 ```
